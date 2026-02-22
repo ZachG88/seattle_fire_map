@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* ─── Leaflet base ─────────────────────────────────────────────────────────── */
+.leaflet-container {
+  background: #0c0f18;
+  font-family: system-ui, sans-serif;
+}
+
+/* Boost tile contrast */
+.leaflet-tile-pane {
+  filter: brightness(3) contrast(1.15) saturate(0.8);
+}
+
+/* ─── Leaflet popup (unused — we use our own overlay) ───────────────────────── */
+.leaflet-popup-content-wrapper { display: none; }
+.leaflet-popup-tip-container   { display: none; }
+
+/* ─── Station tooltip ────────────────────────────────────────────────────────── */
+.sfd-station-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.sfd-station-tooltip::before { display: none !important; }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ─── Live pulse dot ────────────────────────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.45; transform: scale(0.8); }
+}
+.live-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+/* ─── Fade-in-up ────────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.2s ease forwards; }
+
+/* ─── Shimmer skeleton ──────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Incident popup — responsive positioning ──────────────────────────────── */
+/* Mobile: full-width bottom sheet */
+.incident-popup-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+.incident-popup-inner {
+  border-radius: 16px 16px 0 0;
+  max-height: 65vh;
+  /* Drag handle affordance at top */
+}
+.incident-popup-inner::before {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+/* Desktop: anchored panel */
+@media (min-width: 768px) {
+  .incident-popup-wrap {
+    bottom: 16px;
+    left: 16px;
+    right: auto;
+    width: 420px;
+  }
+  .incident-popup-inner {
+    border-radius: 16px;
+    max-height: calc(100vh - 120px);
+  }
+  .incident-popup-inner::before {
+    display: none;
+  }
+}
+
+/* ─── Leaflet attribution + zoom ───────────────────────────────────────────── */
+.leaflet-control-attribution {
+  background: rgba(0,0,0,0.6) !important;
+  color: rgba(255,255,255,0.3) !important;
+  font-size: 9px !important;
+  border-radius: 4px 0 0 0 !important;
+}
+.leaflet-control-attribution a { color: rgba(255,255,255,0.4) !important; }
+
+.leaflet-control-zoom a {
+  background: #151c2c !important;
+  color: #64748b !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.leaflet-control-zoom a:hover {
+  background: #1e2740 !important;
+  color: #e2e8f0 !important;
+}
