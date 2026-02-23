@@ -6,9 +6,9 @@
   font-family: system-ui, sans-serif;
 }
 
-/* Boost tile contrast */
+/* Subtle contrast boost for ESRI Dark Gray tiles */
 .leaflet-tile-pane {
-  filter: brightness(2.25) contrast(1.15) saturate(0.8);
+  filter: brightness(1.15) contrast(1.08);
 }
 
 /* ─── Leaflet popup (unused — we use our own overlay) ───────────────────────── */

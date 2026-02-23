@@ -24,7 +24,7 @@ function createIcon(category, color, isSelected, isActive) {
   const size = isSelected ? 34 : isActive ? 26 : 22;
   const filter = isActive
     ? 'none'
-    : 'grayscale(1) brightness(0.45)';
+    : 'grayscale(0.5) brightness(0.5) saturate(0.6)';
   return L.divIcon({
     html: `<div style="filter:${filter}">${buildMarkerHTML(category, color, size)}</div>`,
     className: '',
@@ -178,11 +178,16 @@ export default function IncidentMap({ incidents, selectedIncident, onSelect, onD
         style={{ width: '100%', height: '100%' }}
         zoomControl={false}
       >
+        {/* ESRI Dark Gray Canvas — base + labels as two layers */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={20}
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+          attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+          maxZoom={16}
+        />
+        <TileLayer
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+          attribution=""
+          maxZoom={16}
         />
         <ZoomControl position="bottomright" />
         <MapController selectedIncident={selectedIncident} />

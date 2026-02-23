@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useFireIncidents } from './hooks/useFireIncidents';
-import { useApparatus } from './hooks/useApparatus';
+import { useApparatus, isIncidentActive } from './hooks/useApparatus';
 import Header from './components/Header';
 import IncidentSidebar from './components/IncidentSidebar';
 import IncidentMap from './components/IncidentMap';
@@ -60,6 +60,11 @@ export default function App() {
     setSelectedIncident(null);
   }, []);
 
+  const activeCount = useMemo(
+    () => incidents.filter(inc => isIncidentActive(inc, apparatusMap)).length,
+    [incidents, apparatusMap]
+  );
+
   const sidebarProps = {
     incidents,
     selectedId: selectedIncident?.id,
@@ -84,12 +89,15 @@ export default function App() {
         refreshing={refreshing}
         onRefresh={refresh}
         incidentCount={incidents.length}
+        activeCount={activeCount}
         error={error}
         apparatusStatus={apparatusStatus}
         apparatusLastFetched={apparatusLastFetched}
+        floating={isMobile}
       />
 
-      {error && (
+      {/* Error banner — desktop only; mobile error shown via header live indicator */}
+      {error && !isMobile && (
         <div
           className="flex items-center gap-2 px-4 py-1.5 text-[11px] text-red-400 shrink-0"
           style={{ background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)' }}
@@ -181,7 +189,7 @@ export default function App() {
       {isMobile && !sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="fixed bottom-5 left-4 z-[1000] flex items-center gap-2 px-3.5 py-2.5 rounded-full
+          className="fixed bottom-8 left-4 z-[1000] flex items-center gap-2 px-3.5 py-2.5 rounded-full
             text-[12px] font-semibold text-slate-200 shadow-xl transition-all duration-150 active:scale-95"
           style={{
             background: '#1e2740',

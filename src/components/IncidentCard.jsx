@@ -7,6 +7,7 @@ export default function IncidentCard({ incident, selected, onClick, apparatusMap
   const category = categorizeIncident(incident.type);
   const style = getCategoryStyle(category);
   const active = isIncidentActive(incident, apparatusMap);
+  const units = apparatusMap?.[incident.incident_number]?.units || [];
 
   return (
     <button
@@ -58,19 +59,38 @@ export default function IncidentCard({ incident, selected, onClick, apparatusMap
               <Clock size={9} className="text-slate-700" />
               <span className="text-[10px] text-slate-600">{timeAgo(incident.datetime)}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              {/* Active / Inactive badge */}
-              <span
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md"
-                style={active
-                  ? { backgroundColor: `${style.color}18`, color: style.color }
-                  : { backgroundColor: 'rgba(255,255,255,0.04)', color: '#475569' }
-                }
-              >
-                {active ? 'Active' : 'Closed'}
-              </span>
-            </div>
+            <span
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md"
+              style={active
+                ? { backgroundColor: `${style.color}18`, color: style.color }
+                : { backgroundColor: 'rgba(255,255,255,0.04)', color: '#475569' }
+              }
+            >
+              {active ? 'Active' : 'Closed'}
+            </span>
           </div>
+
+          {/* Apparatus unit pills */}
+          {units.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2 pt-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              {units.slice(0, 6).map(unit => (
+                <span
+                  key={unit}
+                  className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: '#64748b',
+                  }}
+                >
+                  {unit}
+                </span>
+              ))}
+              {units.length > 6 && (
+                <span className="text-[9px] text-slate-700 self-center">+{units.length - 6}</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </button>
