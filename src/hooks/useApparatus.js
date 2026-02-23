@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// In dev, Vite proxies this to https://web.seattle.gov/sfd/realtime911/getRecsForDatePub.asp
-// avoiding CORS entirely. In production you would need a server-side proxy.
-const SFD_PROXY_URL = '/sfd-realtime/getRecsForDatePub.asp?action=Today&incDate=&rad1=des';
+// In dev, Vite proxies /sfd-realtime to avoid CORS. In production, the Vercel
+// serverless function at /api/sfd-proxy handles the server-side proxy.
+const SFD_PROXY_URL = import.meta.env.DEV
+  ? '/sfd-realtime/getRecsForDatePub.asp?action=Today&incDate=&rad1=des'
+  : '/api/sfd-proxy';
 
 /**
  * Parse the SFD Real-Time 911 page HTML.
