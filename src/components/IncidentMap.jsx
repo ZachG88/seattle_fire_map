@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import { categorizeIncident, getCategoryStyle } from '../utils/incidentUtils';
@@ -21,11 +21,12 @@ const LEGEND_ITEMS = [
 ];
 
 function createIcon(category, color, isSelected, isActive) {
-  const size = isSelected ? 34 : 26;
-  // Dim inactive incidents slightly
-  const opacity = isActive ? 1 : 0.45;
+  const size = isSelected ? 34 : isActive ? 26 : 22;
+  const filter = isActive
+    ? 'none'
+    : 'grayscale(1) brightness(0.45)';
   return L.divIcon({
-    html: `<div style="opacity:${opacity}">${buildMarkerHTML(category, color, size)}</div>`,
+    html: `<div style="filter:${filter}">${buildMarkerHTML(category, color, size)}</div>`,
     className: '',
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -75,7 +76,7 @@ function IncidentMarkers({ incidents, selectedId, onSelect, activeFilter, appara
           icon: createIcon(category, style.color, isSelected, active),
           zIndexOffset: active ? 0 : -50,
         });
-        marker.on('click', () => onSelect(inc));
+        marker.on('click', (e) => { L.DomEvent.stopPropagation(e); onSelect(inc); });
         marker.addTo(map);
         markersRef.current[inc.id] = marker;
       }
@@ -92,7 +93,80 @@ function IncidentMarkers({ incidents, selectedId, onSelect, activeFilter, appara
   return null;
 }
 
-export default function IncidentMap({ incidents, selectedIncident, onSelect, activeFilter, apparatusMap }) {
+// Dismisses the popup when the user taps/clicks on the map background
+function MapClickDismiss({ onDismiss }) {
+  const map = useMap();
+  useEffect(() => {
+    map.on('click', onDismiss);
+    return () => { map.off('click', onDismiss); };
+  }, [map, onDismiss]);
+  return null;
+}
+
+const DEFAULT_SHEET_HEIGHT = 65; // vh
+
+// Bottom-sheet popup with a real draggable handle on mobile
+function PopupSheet({ selectedIncident, apparatusMap, onClose }) {
+  const isMobile = window.innerWidth < 768;
+  const [height, setHeight] = useState(DEFAULT_SHEET_HEIGHT);
+  const drag = useRef({ active: false, startY: 0, startH: DEFAULT_SHEET_HEIGHT });
+
+  // Reset height whenever a different incident is opened
+  useEffect(() => { setHeight(DEFAULT_SHEET_HEIGHT); }, [selectedIncident?.id]);
+
+  const onTouchStart = useCallback((e) => {
+    drag.current = { active: true, startY: e.touches[0].clientY, startH: height };
+  }, [height]);
+
+  const onTouchMove = useCallback((e) => {
+    if (!drag.current.active) return;
+    const dy = drag.current.startY - e.touches[0].clientY; // positive = dragging up
+    const next = Math.max(15, Math.min(92, drag.current.startH + (dy / window.innerHeight) * 100));
+    setHeight(next);
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!drag.current.active) return;
+    drag.current.active = false;
+    // Snap closed if dragged below threshold
+    setHeight(prev => {
+      if (prev < 28) { onClose(); return DEFAULT_SHEET_HEIGHT; }
+      return prev;
+    });
+  }, [onClose]);
+
+  return (
+    <div className="incident-popup-wrap fade-in-up">
+      <div
+        className="incident-popup-inner overflow-hidden shadow-2xl border border-white/[0.09] flex flex-col"
+        style={{
+          background: '#111827',
+          ...(isMobile ? { height: `${height}vh`, maxHeight: 'none', transition: drag.current.active ? 'none' : 'height 0.2s ease' } : {}),
+        }}
+      >
+        {/* Drag handle — mobile only, fully interactive */}
+        {isMobile && (
+          <div
+            className="flex items-center justify-center shrink-0 select-none"
+            style={{ padding: '10px 0 6px', touchAction: 'none', cursor: 'grab' }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            <div className="w-9 rounded-full" style={{ height: 4, background: 'rgba(255,255,255,0.2)' }} />
+          </div>
+        )}
+        <IncidentPopup
+          incident={selectedIncident}
+          apparatus={apparatusMap?.[selectedIncident.incident_number]}
+          onClose={onClose}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function IncidentMap({ incidents, selectedIncident, onSelect, onDeselect, activeFilter, apparatusMap }) {
   const [showStations, setShowStations] = useState(true);
   const [legendOpen, setLegendOpen] = useState(() => window.innerWidth >= 768);
 
@@ -114,6 +188,7 @@ export default function IncidentMap({ incidents, selectedIncident, onSelect, act
         <MapController selectedIncident={selectedIncident} />
         <StationMarkers visible={showStations} />
         <RouteLayer selectedIncident={selectedIncident} apparatusMap={apparatusMap} />
+        {selectedIncident && <MapClickDismiss onDismiss={onDeselect} />}
         <IncidentMarkers
           incidents={incidents}
           selectedId={selectedIncident?.id}
@@ -125,18 +200,11 @@ export default function IncidentMap({ incidents, selectedIncident, onSelect, act
 
       {/* Selected incident detail panel */}
       {selectedIncident && (
-        <div className="incident-popup-wrap fade-in-up">
-          <div
-            className="incident-popup-inner overflow-hidden shadow-2xl border border-white/[0.09] flex flex-col"
-            style={{ background: '#111827' }}
-          >
-            <IncidentPopup
-              incident={selectedIncident}
-              apparatus={apparatusMap?.[selectedIncident.incident_number]}
-              onClose={() => onSelect(selectedIncident)}
-            />
-          </div>
-        </div>
+        <PopupSheet
+          selectedIncident={selectedIncident}
+          apparatusMap={apparatusMap}
+          onClose={onDeselect}
+        />
       )}
 
       {/* Map controls panel (top-right) */}
@@ -183,7 +251,7 @@ export default function IncidentMap({ incidents, selectedIncident, onSelect, act
                   <span className="text-[10px] text-slate-400">Active</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-white/25 shrink-0" />
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'rgba(100,116,139,0.4)' }} />
                   <span className="text-[10px] text-slate-400">Inactive</span>
                 </div>
               </div>

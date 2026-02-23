@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   MapPin, Clock, Hash, Navigation, ExternalLink, Radio,
   X, ShieldAlert, Building2, History,
-  FileText, ChevronRight, Thermometer, Wind, Layers, Accessibility,
+  FileText, ChevronRight, Thermometer, Wind, Accessibility,
 } from 'lucide-react';
 import { getCategoryStyle, categorizeIncident, formatDateTime, timeAgo } from '../utils/incidentUtils';
 import { isIncidentActive } from '../hooks/useApparatus';
@@ -110,7 +110,7 @@ export default function IncidentPopup({ incident, apparatus, onClose }) {
   const showFireWeather = (category === 'fire') && weather;
 
   return (
-    <div className="flex flex-col max-h-[calc(100vh-140px)] overflow-hidden">
+    <div className="flex flex-col overflow-hidden" style={{ minHeight: 0, flex: '1 1 auto' }}>
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div
@@ -181,7 +181,7 @@ export default function IncidentPopup({ incident, apparatus, onClose }) {
       </div>
 
       {/* ── Scrollable body ──────────────────────────────────────────────────── */}
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-scroll flex-1" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
 
         {/* Location & Time */}
         <Section icon={MapPin} title="Location & Time">
@@ -234,12 +234,6 @@ export default function IncidentPopup({ incident, apparatus, onClose }) {
               <div>
                 <p className="text-[11px] text-slate-300 font-medium">{typeInfo.label}</p>
               </div>
-              {typeInfo.response && (
-                <div className="pt-2 border-t border-white/[0.05]">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Standard Response</p>
-                  <p className="text-[11px] text-slate-400">{typeInfo.response}</p>
-                </div>
-              )}
             </div>
           </Section>
         )}
@@ -259,14 +253,6 @@ export default function IncidentPopup({ incident, apparatus, onClose }) {
                   {building.operator && building.operator !== building.name && (
                     <p className="text-[10px] text-slate-500 mt-0.5">Operated by {building.operator}</p>
                   )}
-                </div>
-              )}
-
-              {/* Classification */}
-              {building.classification && (
-                <div className="flex items-center gap-2">
-                  <Layers size={11} className="text-slate-600 shrink-0" />
-                  <span className="text-[11px] text-slate-300">{building.classification.label}</span>
                 </div>
               )}
 

@@ -8,7 +8,7 @@
 
 /* Boost tile contrast */
 .leaflet-tile-pane {
-  filter: brightness(3) contrast(1.15) saturate(0.8);
+  filter: brightness(2.25) contrast(1.15) saturate(0.8);
 }
 
 /* ─── Leaflet popup (unused — we use our own overlay) ───────────────────────── */
@@ -25,10 +25,17 @@
 .sfd-station-tooltip::before { display: none !important; }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+/* Desktop: thin custom scrollbar */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+}
+/* Mobile: suppress custom scrollbar so iOS renders its native overlay indicator */
+@media (max-width: 767px) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
 
 /* ─── Live pulse dot ────────────────────────────────────────────────────────── */
 @keyframes pulse-dot {
@@ -73,16 +80,6 @@
   max-height: 65vh;
   /* Drag handle affordance at top */
 }
-.incident-popup-inner::before {
-  content: '';
-  display: block;
-  width: 36px;
-  height: 4px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px;
-  margin: 10px auto 0;
-  flex-shrink: 0;
-}
 /* Desktop: anchored panel */
 @media (min-width: 768px) {
   .incident-popup-wrap {
@@ -94,9 +91,6 @@
   .incident-popup-inner {
     border-radius: 16px;
     max-height: calc(100vh - 120px);
-  }
-  .incident-popup-inner::before {
-    display: none;
   }
 }
 

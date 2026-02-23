@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useFireIncidents } from './hooks/useFireIncidents';
 import { useApparatus } from './hooks/useApparatus';
 import Header from './components/Header';
@@ -24,11 +24,35 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState(null);
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const [sidebarHeight, setSidebarHeight] = useState(68); // vh
+  const sidebarDrag = useRef({ active: false, startY: 0, startH: 68 });
 
   const handleSelectIncident = useCallback((incident) => {
     setSelectedIncident(prev => prev?.id === incident.id ? null : incident);
     // Close sidebar sheet when selecting an incident on mobile
     if (window.innerWidth < 768) setSidebarOpen(false);
+  }, []);
+
+  const handleDeselect = useCallback(() => setSelectedIncident(null), []);
+
+  const onSidebarDragStart = useCallback((e) => {
+    sidebarDrag.current = { active: true, startY: e.touches[0].clientY, startH: sidebarHeight };
+  }, [sidebarHeight]);
+
+  const onSidebarDragMove = useCallback((e) => {
+    if (!sidebarDrag.current.active) return;
+    const dy = sidebarDrag.current.startY - e.touches[0].clientY; // positive = up
+    const next = Math.max(20, Math.min(92, sidebarDrag.current.startH + (dy / window.innerHeight) * 100));
+    setSidebarHeight(next);
+  }, []);
+
+  const onSidebarDragEnd = useCallback(() => {
+    if (!sidebarDrag.current.active) return;
+    sidebarDrag.current.active = false;
+    setSidebarHeight(prev => {
+      if (prev < 30) { setSidebarOpen(false); return 68; }
+      return prev;
+    });
   }, []);
 
   const handleFilterChange = useCallback((filter) => {
@@ -113,6 +137,7 @@ export default function App() {
             incidents={incidents}
             selectedIncident={selectedIncident}
             onSelect={handleSelectIncident}
+            onDeselect={handleDeselect}
             activeFilter={activeFilter}
             apparatusMap={apparatusMap}
           />
@@ -130,14 +155,22 @@ export default function App() {
             className="flex flex-col rounded-t-2xl overflow-hidden fade-in-up"
             style={{
               background: '#0c0f18',
-              height: '68vh',
+              height: `${sidebarHeight}vh`,
+              maxHeight: 'none',
               border: '1px solid rgba(255,255,255,0.09)',
               borderBottom: 'none',
+              transition: sidebarDrag.current.active ? 'none' : 'height 0.2s ease',
             }}
           >
-            {/* Drag handle */}
-            <div className="flex items-center justify-center pt-2.5 pb-1 shrink-0">
-              <div className="w-9 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+            {/* Draggable handle */}
+            <div
+              className="flex items-center justify-center shrink-0 select-none"
+              style={{ padding: '10px 0 6px', touchAction: 'none', cursor: 'grab' }}
+              onTouchStart={onSidebarDragStart}
+              onTouchMove={onSidebarDragMove}
+              onTouchEnd={onSidebarDragEnd}
+            >
+              <div className="w-9 rounded-full" style={{ height: 4, background: 'rgba(255,255,255,0.2)' }} />
             </div>
             <IncidentSidebar {...sidebarProps} />
           </div>

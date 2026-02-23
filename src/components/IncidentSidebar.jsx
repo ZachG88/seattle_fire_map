@@ -109,7 +109,7 @@ export default function IncidentSidebar({ incidents, selectedId, onSelect, activ
       </div>
 
       {/* Incident list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-scroll" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 gap-2">
             <Search size={20} className="text-slate-700" />
